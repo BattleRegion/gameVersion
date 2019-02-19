@@ -3,8 +3,10 @@ const dataAccess = require('dataAccess');
 const Command  = dataAccess.command;
 const Executor = dataAccess.executor;
 const app = express();
+const cryptoUtil = require('./cryptoUtil');
 const dbEnv = "local";
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 dataAccess.setPoolConfig(require('./mysql'));
 app.get('/version', (req,res) => {
     console.log(req.query);
@@ -26,6 +28,38 @@ app.get('/version', (req,res) => {
             res.send({code:500})
         }
     })
+});
+
+const sec = `232198a88ecf39e6632cc893dfc7d232b959f5d9d95df84bbbc4e11162207be0`;
+const tv = {
+    v:"1",
+    tag:'zq',
+    url:'xxxx'
+};
+console.log(cryptoUtil.toSecret(JSON.stringify(tv),sec));
+
+app.post('/updateVersion',(req,res) =>{
+    let v = req.body['v'];
+    try{
+        let tv = JSON.parse(cryptoUtil.toBasic(v, sec));
+        let version = tv["v"];
+        let tag = tv["tag"];
+        let url = tv["url"];
+        let sql = new Command('insert into version(gameTag, version, resourceUrl,updateAt) values(?,?,?,?)',[tag, version, url, ~~(new Date().getTime())]);
+        Executor.query(dbEnv, sql,(e,r)=>{
+            if(e){
+                console.log(e);
+                res.send({code:500})
+            }
+            else{
+                res.send({code:200})
+            }
+        })
+    }
+    catch (e) {
+        console.log(e);
+        res.send({code:500})
+    }
 });
 
 app.listen(8989);
