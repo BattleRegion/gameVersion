@@ -39,27 +39,19 @@ const tv = {
 console.log(cryptoUtil.toSecret(JSON.stringify(tv),sec));
 
 app.post('/updateVersion',(req,res) =>{
-    let v = req.body['v'];
-    try{
-        let tv = JSON.parse(cryptoUtil.toBasic(v, sec));
-        let version = tv["v"];
-        let tag = tv["tag"];
-        let url = tv["url"];
-        let sql = new Command('insert into version(gameTag, version, resourceUrl,updateAt) values(?,?,?,?)',[tag, version, url, ~~(new Date().getTime())]);
-        Executor.query(dbEnv, sql,(e,r)=>{
-            if(e){
-                console.log(e);
-                res.send({code:500})
-            }
-            else{
-                res.send({code:200})
-            }
-        })
-    }
-    catch (e) {
-        console.log(e);
-        res.send({code:500})
-    }
+    let version = req.body["v"];
+    let tag = req.body["tag"];
+    let url = req.body["url"];
+    let sql = new Command('insert into version(gameTag, version, resourceUrl,updateAt) values(?,?,?,?)',[tag, version, url, ~~(new Date().getTime())]);
+    Executor.query(dbEnv, sql,(e,r)=>{
+        if(e){
+            console.log(e);
+            res.send({code:500})
+        }
+        else{
+            res.send({code:200})
+        }
+    })
 });
 
 app.listen(8989);
